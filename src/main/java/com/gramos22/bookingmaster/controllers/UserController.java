@@ -17,6 +17,6 @@ public class UserController {
     public UserResponse getUserById(int id) {return userService.getUserById(id);}
 
     @DeleteMapping("/{id}")
-    public UserResponse deleteUserById(int id) {return userService.deleteUserById(id);} 
+    public UserResponse deleteUserById(int id) {return userService.deleteUserById(id);}
 
 }
