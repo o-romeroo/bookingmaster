@@ -1,6 +1,7 @@
 package com.gramos22.bookingmaster.controllers;
 
 import com.gramos22.bookingmaster.dtos.UserRequest;
+import com.gramos22.bookingmaster.dtos.UserResponse;
 import com.gramos22.bookingmaster.entities.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;

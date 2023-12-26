@@ -2,11 +2,14 @@ package com.gramos22.bookingmaster.dtos;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
-import lombok.RequiredArgsConstructor;
+import lombok.NoArgsConstructor;
 
 @AllArgsConstructor
-@RequiredArgsConstructor
-public class UserRequest {
+@NoArgsConstructor
+public class UserResponse {
+    @JsonProperty("user_id")
+    private int id;
+
     @JsonProperty("email")
     private String email;
 
@@ -18,6 +21,14 @@ public class UserRequest {
 
     @JsonProperty("document")
     private String document;
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
 
     public String getEmail() {
         return email;
