@@ -12,36 +12,17 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
-import org.testcontainers.containers.MariaDBContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
+import org.springframework.test.context.ActiveProfiles;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Testes de Integração para User
- * Utiliza Testcontainers para criar um banco MariaDB real
+ * Usa banco de dados configurado via properties (H2 para local, MariaDB para CI)
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@Testcontainers
+@ActiveProfiles("integration-test")
 class UserIntegrationTest {
-
-    @Container
-    static MariaDBContainer<?> mariaDBContainer = new MariaDBContainer<>("mariadb:11.2")
-            .withDatabaseName("bmdb_test")
-            .withUsername("test")
-            .withPassword("test")
-            .withReuse(true);
-
-    @DynamicPropertySource
-    static void configureProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", mariaDBContainer::getJdbcUrl);
-        registry.add("spring.datasource.username", mariaDBContainer::getUsername);
-        registry.add("spring.datasource.password", mariaDBContainer::getPassword);
-        registry.add("spring.jpa.hibernate.ddl-auto", () -> "create-drop");
-    }
 
     @LocalServerPort
     private int port;

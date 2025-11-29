@@ -4,11 +4,6 @@ pipeline {
     environment {
         DOCKER_IMAGE = 'bookingmaster'
         DOCKER_TAG = "${BUILD_NUMBER}"
-        // Configurações para Testcontainers funcionar dentro do Jenkins
-        TESTCONTAINERS_RYUK_DISABLED = 'true'
-        TESTCONTAINERS_CHECKS_DISABLE = 'true'
-        DOCKER_HOST = 'unix:///var/run/docker.sock'
-        TESTCONTAINERS_HOST_OVERRIDE = 'host.docker.internal'
     }
 
     options {
@@ -63,11 +58,49 @@ pipeline {
 
                 stage('Integration Tests') {
                     steps {
-                        sh './mvnw failsafe:integration-test failsafe:verify -Dit.test=*IntegrationTest'
+                        script {
+                            // Inicia um container MariaDB para os testes de integração
+                            // IMPORTANTE: O container é conectado à mesma rede do Jenkins
+                            sh '''
+                                docker rm -f mariadb-integration-test || true
+                                docker run -d --name mariadb-integration-test \
+                                    --network bookingmaster-network \
+                                    -e MYSQL_ROOT_PASSWORD=test \
+                                    -e MYSQL_DATABASE=bmdb_test \
+                                    -e MYSQL_USER=test \
+                                    -e MYSQL_PASSWORD=test \
+                                    mariadb:11.2
+                                
+                                # Aguarda o MariaDB estar pronto
+                                echo "Aguardando MariaDB iniciar..."
+                                for i in $(seq 1 30); do
+                                    if docker exec mariadb-integration-test mariadb -utest -ptest -e "SELECT 1" > /dev/null 2>&1; then
+                                        echo "MariaDB está pronto!"
+                                        break
+                                    fi
+                                    echo "Tentativa $i/30 - aguardando..."
+                                    sleep 2
+                                done
+                            '''
+                            
+                            // Executa os testes de integração com o banco MariaDB externo
+                            // Usa o nome do container como hostname (mesma rede Docker)
+                            sh '''
+                                ./mvnw failsafe:integration-test failsafe:verify \
+                                    -Dit.test=*IntegrationTest \
+                                    -Dspring.profiles.active=integration-test \
+                                    -Dspring.datasource.url=jdbc:mariadb://mariadb-integration-test:3306/bmdb_test \
+                                    -Dspring.datasource.username=test \
+                                    -Dspring.datasource.password=test \
+                                    -Dspring.datasource.driver-class-name=org.mariadb.jdbc.Driver \
+                                    -Dspring.jpa.hibernate.ddl-auto=create-drop
+                            '''
+                        }
                         echo 'Testes de integração executados'
                     }
                     post {
                         always {
+                            sh 'docker rm -f mariadb-integration-test || true'
                             junit testResults: 'target/failsafe-reports/*.xml', allowEmptyResults: true
                         }
                     }
@@ -116,9 +149,10 @@ pipeline {
                                 docker compose -f docker-compose-test.yml up -d
                                 
                                 # Aguarda aplicação estar pronta (health check)
+                                # Usa host.docker.internal porque o Jenkins roda em container
                                 echo "Aguardando aplicação iniciar..."
                                 for i in $(seq 1 60); do
-                                    if curl -s http://localhost:8090/actuator/health | grep -q "UP"; then
+                                    if curl -s http://host.docker.internal:8090/actuator/health | grep -q "UP"; then
                                         echo "Aplicação está pronta!"
                                         break
                                     fi
@@ -134,7 +168,8 @@ pipeline {
                 stage('Acceptance Tests (E2E)') {
                     steps {
                         script {
-                            sh './mvnw failsafe:integration-test failsafe:verify -Dit.test=*AcceptanceTest -Dtest.server.port=8090'
+                            // Usa host.docker.internal porque Jenkins roda em container Docker
+                            sh './mvnw failsafe:integration-test failsafe:verify -Dit.test=*AcceptanceTest -Dtest.server.host=host.docker.internal -Dtest.server.port=8090'
                             echo 'Testes de aceitação E2E executados'
                         }
                     }
@@ -179,10 +214,11 @@ pipeline {
                 stage('Production Health Check') {
                     steps {
                         script {
+                            // Usa host.docker.internal porque Jenkins roda em container
                             sh '''
                                 echo "Verificando saúde da aplicação em produção..."
                                 for i in $(seq 1 30); do
-                                    if curl -s http://localhost:8080/actuator/health | grep -q "UP"; then
+                                    if curl -s http://host.docker.internal:8080/actuator/health | grep -q "UP"; then
                                         echo "Aplicação em produção está saudável!"
                                         exit 0
                                     fi

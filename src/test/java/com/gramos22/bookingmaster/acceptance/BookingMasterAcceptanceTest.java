@@ -8,13 +8,6 @@ import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
-import org.testcontainers.containers.MariaDBContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
@@ -24,34 +17,26 @@ import static org.hamcrest.Matchers.*;
  * 
  * Estes testes validam cenários completos de uso da API,
  * garantindo que o sistema funciona do ponto de vista do usuário final.
+ * 
+ * IMPORTANTE: Estes testes rodam contra uma aplicação já em execução.
+ * O ambiente de teste é configurado via docker-compose-test.yml.
+ * A porta do servidor é configurável via propriedade de sistema -Dtest.server.port
  */
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@Testcontainers
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class BookingMasterAcceptanceTest {
 
-    @Container
-    static MariaDBContainer<?> mariaDBContainer = new MariaDBContainer<>("mariadb:11.2")
-            .withDatabaseName("bmdb_acceptance")
-            .withUsername("test")
-            .withPassword("test");
-
-    @DynamicPropertySource
-    static void configureProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", mariaDBContainer::getJdbcUrl);
-        registry.add("spring.datasource.username", mariaDBContainer::getUsername);
-        registry.add("spring.datasource.password", mariaDBContainer::getPassword);
-        registry.add("spring.jpa.hibernate.ddl-auto", () -> "create-drop");
-    }
-
-    @LocalServerPort
-    private int port;
-
+    private static int serverPort;
+    private static String serverHost;
     private static Long createdHotelId;
     private static int createdUserId;
 
     @BeforeAll
     static void setup() {
+        // Host e porta configuráveis via propriedades de sistema
+        serverHost = System.getProperty("test.server.host", "localhost");
+        serverPort = Integer.parseInt(System.getProperty("test.server.port", "8090"));
+        RestAssured.baseURI = "http://" + serverHost;
+        RestAssured.port = serverPort;
         RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
     }
 
@@ -72,7 +57,6 @@ class BookingMasterAcceptanceTest {
             """;
 
         given()
-            .port(port)
             .contentType(ContentType.JSON)
             .body(hotelJson)
         .when()
@@ -86,7 +70,6 @@ class BookingMasterAcceptanceTest {
     @DisplayName("Cenário 1.2: Sistema deve listar hotéis cadastrados")
     void shouldListRegisteredHotels() {
         createdHotelId = given()
-            .port(port)
             .contentType(ContentType.JSON)
         .when()
             .get("/hotels")
@@ -106,7 +89,6 @@ class BookingMasterAcceptanceTest {
     @DisplayName("Cenário 1.3: Sistema deve retornar detalhes de um hotel específico")
     void shouldReturnHotelDetails() {
         given()
-            .port(port)
             .contentType(ContentType.JSON)
         .when()
             .get("/hotels/" + createdHotelId)
@@ -134,7 +116,6 @@ class BookingMasterAcceptanceTest {
             """;
 
         given()
-            .port(port)
             .contentType(ContentType.JSON)
             .body(userJson)
         .when()
@@ -152,7 +133,6 @@ class BookingMasterAcceptanceTest {
         createdUserId = 1;
 
         given()
-            .port(port)
             .contentType(ContentType.JSON)
         .when()
             .get("/users/" + createdUserId)
@@ -172,7 +152,6 @@ class BookingMasterAcceptanceTest {
     @DisplayName("Cenário 3.1: Sistema deve estar saudável (health check)")
     void systemShouldBeHealthy() {
         given()
-            .port(port)
         .when()
             .get("/actuator/health")
         .then()
@@ -185,7 +164,6 @@ class BookingMasterAcceptanceTest {
     @DisplayName("Cenário 3.2: Sistema deve retornar 404 para hotel inexistente")
     void shouldReturn404ForNonExistentHotel() {
         given()
-            .port(port)
             .contentType(ContentType.JSON)
         .when()
             .get("/hotels/999999")
@@ -202,7 +180,6 @@ class BookingMasterAcceptanceTest {
     @DisplayName("Cenário 4.1: Sistema deve permitir deletar usuário")
     void shouldAllowDeletingUser() {
         given()
-            .port(port)
             .contentType(ContentType.JSON)
         .when()
             .delete("/users/" + createdUserId)
@@ -215,7 +192,6 @@ class BookingMasterAcceptanceTest {
     @DisplayName("Cenário 4.2: Sistema deve permitir deletar hotel")
     void shouldAllowDeletingHotel() {
         given()
-            .port(port)
             .contentType(ContentType.JSON)
         .when()
             .delete("/hotels/" + createdHotelId)
@@ -228,7 +204,6 @@ class BookingMasterAcceptanceTest {
     @DisplayName("Cenário 4.3: Lista de hotéis deve estar vazia após deleção")
     void hotelListShouldBeEmptyAfterDeletion() {
         given()
-            .port(port)
             .contentType(ContentType.JSON)
         .when()
             .get("/hotels")
