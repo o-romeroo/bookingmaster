@@ -1,15 +1,29 @@
 package com.gramos22.bookingmaster.dtos;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import java.time.LocalDate;
 import java.util.List;
 
+@Schema(description = "Dados de resposta de uma reserva")
 public class BookingResponse {
 
+    @Schema(description = "ID único da reserva", example = "1")
     private Long id;
+
+    @Schema(description = "Nome do usuário que fez a reserva", example = "João Silva")
     private String userName;
+
+    @Schema(description = "Nome do hotel reservado", example = "Hotel Copacabana Palace")
     private String hotelName;
+
+    @Schema(description = "Data de check-in", example = "2025-12-01")
     private LocalDate checkInDate;
+
+    @Schema(description = "Data de check-out", example = "2025-12-05")
     private LocalDate checkOutDate;
+
+    @Schema(description = "Lista de acompanhantes")
     private List<String> companions;
 
     // Getters and Setters

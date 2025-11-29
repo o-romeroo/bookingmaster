@@ -5,7 +5,6 @@ import io.swagger.v3.oas.models.info.Contact;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.info.License;
 import io.swagger.v3.oas.models.servers.Server;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -15,14 +14,11 @@ import java.util.List;
  * Configuração do OpenAPI/Swagger para documentação da API.
  * 
  * Acesse a documentação em:
- * - Swagger UI: http://localhost:8080/swagger-ui.html
- * - OpenAPI JSON: http://localhost:8080/api-docs
+ * - Swagger UI: /swagger-ui.html
+ * - OpenAPI JSON: /api-docs
  */
 @Configuration
 public class OpenApiConfig {
-
-    @Value("${server.port:8080}")
-    private String serverPort;
 
     @Bean
     public OpenAPI bookingMasterOpenAPI() {
@@ -42,11 +38,8 @@ public class OpenApiConfig {
                                 .url("https://opensource.org/licenses/MIT")))
                 .servers(List.of(
                         new Server()
-                                .url("http://localhost:" + serverPort)
-                                .description("Servidor Local"),
-                        new Server()
-                                .url("http://localhost:8090")
-                                .description("Servidor de Testes")
+                                .url("https://oviferous-unabashedly-sherwood.ngrok-free.dev")
+                                .description("Servidor de Produção (Ngrok)")
                 ));
     }
 }
