@@ -46,11 +46,44 @@ pipeline {
 
                 stage('Unit Tests') {
                     steps {
-                        sh './mvnw test -Dtest=!*IntegrationTest,!*AcceptanceTest'
+                        script {
+                            sh '''
+                                docker rm -f mariadb-unit-test || true
+                                docker run -d --name mariadb-unit-test \
+                                    --network bookingmaster-network \
+                                    -e MYSQL_ROOT_PASSWORD=testroot123 \
+                                    -e MYSQL_DATABASE=bookingmaster_test \
+                                    -e MYSQL_USER=testuser \
+                                    -e MYSQL_PASSWORD=testpass123 \
+                                    mariadb:11.2
+
+                                echo "Aguardando MariaDB (unit tests) iniciar..."
+                                for i in $(seq 1 30); do
+                                    if docker exec mariadb-unit-test mariadb -utestuser -ptestpass123 -e "SELECT 1" > /dev/null 2>&1; then
+                                        echo "MariaDB unit-test pronto!"
+                                        break
+                                    fi
+                                    echo "Tentativa $i/30 - aguardando..."
+                                    sleep 2
+                                done
+                            '''
+
+                            withEnv([
+                                'SPRING_DATASOURCE_URL=jdbc:mariadb://mariadb-unit-test:3306/bookingmaster_test',
+                                'SPRING_DATASOURCE_USERNAME=testuser',
+                                'SPRING_DATASOURCE_PASSWORD=testpass123',
+                                'SPRING_DATASOURCE_DRIVER_CLASS_NAME=org.mariadb.jdbc.Driver',
+                                'SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.MariaDBDialect',
+                                'SPRING_JPA_HIBERNATE_DDL_AUTO=create-drop'
+                            ]) {
+                                sh './mvnw test -Dtest=!*IntegrationTest,!*AcceptanceTest'
+                            }
+                        }
                         echo 'Testes unitários executados'
                     }
                     post {
                         always {
+                            sh 'docker rm -f mariadb-unit-test || true'
                             junit testResults: 'target/surefire-reports/*.xml', allowEmptyResults: true
                         }
                     }
