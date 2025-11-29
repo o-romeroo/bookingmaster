@@ -2,7 +2,9 @@ package com.gramos22.bookingmaster.entities;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -10,12 +12,13 @@ import java.util.List;
 @Entity
 @Table(name = "bookings")
 @AllArgsConstructor
+@NoArgsConstructor
 public class Booking {
 
     @Id
     @Column(name = "booking_id", nullable = false)
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private Long id;
 
     @Column(name = "order_code", nullable = false)
     private String code;
@@ -40,15 +43,21 @@ public class Booking {
     @Column(name = "check_out_date")
     private Date check_out;
 
+    @Column(name = "check_in_local_date")
+    private LocalDate checkInDate;
+
+    @Column(name = "check_out_local_date")
+    private LocalDate checkOutDate;
+
     @Column(name = "price", nullable = false)
     private double price;
 
     // Getters and Setters
-    public int getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
@@ -114,5 +123,21 @@ public class Booking {
 
     public void setPrice(double price) {
         this.price = price;
+    }
+
+    public LocalDate getCheckInDate() {
+        return checkInDate;
+    }
+
+    public void setCheckInDate(LocalDate checkInDate) {
+        this.checkInDate = checkInDate;
+    }
+
+    public LocalDate getCheckOutDate() {
+        return checkOutDate;
+    }
+
+    public void setCheckOutDate(LocalDate checkOutDate) {
+        this.checkOutDate = checkOutDate;
     }
 }

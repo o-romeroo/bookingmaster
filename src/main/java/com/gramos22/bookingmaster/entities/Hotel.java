@@ -2,6 +2,7 @@ package com.gramos22.bookingmaster.entities;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,11 +10,12 @@ import java.util.List;
 @Entity
 @Table(name = "hotels")
 @AllArgsConstructor
+@NoArgsConstructor
 public class Hotel {
     @Id
     @Column(name = "hotel_id", nullable = false)
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private Long id;
 
     @Column(name = "hotel_name", nullable = false)
     private String name;
@@ -31,11 +33,11 @@ public class Hotel {
     private List<Booking> bookings = new ArrayList<>();
 
     // Getters and Setters
-    public int getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(Long id) {
         this.id = id;
     }
 

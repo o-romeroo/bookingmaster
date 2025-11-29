@@ -24,7 +24,7 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     public void createBooking(BookingRequest bookingRequest) {
-        User user = userRepository.findById(bookingRequest.getUserId()).orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userRepository.findById(bookingRequest.getUserId().intValue()).orElseThrow(() -> new RuntimeException("User not found"));
         Hotel hotel = hotelRepository.findById(bookingRequest.getHotelId()).orElseThrow(() -> new RuntimeException("Hotel not found"));
 
         Booking booking = new Booking();

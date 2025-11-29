@@ -56,7 +56,7 @@ public class BookingServiceTests {
         Hotel hotel = new Hotel();
         hotel.setId(1L);
 
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(userRepository.findById(1)).thenReturn(Optional.of(user));
         when(hotelRepository.findById(1L)).thenReturn(Optional.of(hotel));
 
         bookingService.createBooking(request);
@@ -87,11 +87,29 @@ public class BookingServiceTests {
 
     @Test
     void testGetAllBookings() {
+        User user1 = new User();
+        user1.setFirst_name("John");
+        user1.setLast_name("Doe");
+        
+        Hotel hotel1 = new Hotel();
+        hotel1.setName("Hotel One");
+        
         Booking booking1 = new Booking();
         booking1.setId(1L);
+        booking1.setUser(user1);
+        booking1.setHotel(hotel1);
 
+        User user2 = new User();
+        user2.setFirst_name("Jane");
+        user2.setLast_name("Doe");
+        
+        Hotel hotel2 = new Hotel();
+        hotel2.setName("Hotel Two");
+        
         Booking booking2 = new Booking();
         booking2.setId(2L);
+        booking2.setUser(user2);
+        booking2.setHotel(hotel2);
 
         when(bookingRepository.findAll()).thenReturn(Arrays.asList(booking1, booking2));
 

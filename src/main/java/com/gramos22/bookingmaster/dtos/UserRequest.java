@@ -50,4 +50,13 @@ public class UserRequest {
     public void setDocument(String document) {
         this.document = document;
     }
+
+    // Alias methods for compatibility
+    public void setFirstName(String firstName) {
+        this.first_name = firstName;
+    }
+
+    public void setLastName(String lastName) {
+        this.last_name = lastName;
+    }
 }
