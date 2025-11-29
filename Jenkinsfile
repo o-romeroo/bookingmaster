@@ -29,15 +29,6 @@ pipeline {
     }
 
     stages {
-
-        /* ==========================================================
-         *   ETAPA DE COMMIT (Commit Stage)
-         *   - Checkout
-         *   - Build
-         *   - Testes Unitários
-         *   - Testes de Integração
-         *   - Package
-         * ========================================================== */
         stage('Commit Stage') {
             stages {
                 stage('Checkout') {
@@ -127,8 +118,6 @@ pipeline {
                             """
                         }
                         
-                        // Executa os testes de integração usando variáveis de ambiente
-                        // Spring Boot prioriza env vars (SPRING_*) sobre properties
                         withEnv([
                             "SPRING_DATASOURCE_URL=jdbc:mariadb://mariadb-integration-test:3306/${TEST_DB_NAME}",
                             "SPRING_DATASOURCE_USERNAME=${TEST_DB_USER}",
@@ -169,12 +158,6 @@ pipeline {
             }
         }
 
-        /* ==========================================================
-         *   ETAPA DE TESTE DE ACEITAÇÃO (Acceptance Stage)
-         *   - Deploy temporário para testes
-         *   - Testes E2E / Aceitação
-         *   - Cleanup do ambiente de teste
-         * ========================================================== */
         stage('Acceptance Stage') {
             stages {
                 stage('Start Test Environment') {
@@ -183,7 +166,6 @@ pipeline {
                             // Para qualquer container anterior de teste
                             sh 'docker compose -f docker-compose-test.yml down --remove-orphans || true'
                             
-                            // Inicia ambiente de teste isolado (variáveis TEST_DB_* já estão no environment global)
                             sh """
                                 export TEST_DB_ROOT_PASSWORD=${TEST_DB_ROOT_PASSWORD}
                                 export TEST_DB_NAME=${TEST_DB_NAME}
@@ -233,11 +215,6 @@ pipeline {
             }
         }
 
-        /* ==========================================================
-         *   ETAPA DE LANÇAMENTO (Release Stage)
-         *   - Deploy em produção (atualiza container existente)
-         *   - Verificação de saúde pós-deploy
-         * ========================================================== */
         stage('Release Stage') {
             stages {
                 stage('Deploy to Production') {
@@ -309,25 +286,12 @@ pipeline {
     post {
         success {
             echo '''
-            ╔════════════════════════════════════════════════════════════╗
-            ║  PIPELINE CONCLUÍDO COM SUCESSO!                           ║
-            ║                                                            ║
-            ║  Etapas executadas:                                        ║
-            ║   - Commit Stage (Build + Unit + Integration Tests)        ║
-            ║   - Acceptance Stage (E2E Tests)                           ║
-            ║   - Release Stage (Deploy em Produção)                     ║
-            ║                                                            ║
-            ║  Aplicação disponível em: http://localhost:8080            ║
-            ╚════════════════════════════════════════════════════════════╝
+              PIPELINE CONCLUÍDO COM SUCESSO!
             '''
         }
         failure {
             echo '''
-            ╔════════════════════════════════════════════════════════════════╗
-            ║  PIPELINE FALHOU!                                              ║
-            ║                                                                ║
-            ║  Verifique os logs para detalhes do erro.                      ║
-            ╚════════════════════════════════════════════════════════════════╝
+              PIPELINE FALHOU! Verifique os logs para detalhes do erro.
             '''
             // Cleanup em caso de falha
             node('') {

@@ -38,8 +38,13 @@ bookingmaster/
 
 ## Endpoints da API
 
+**Documentação interativa disponível em:** http://localhost:8080/swagger-ui.html
+
 | Recurso   | Método | Endpoint        | Descrição                |
 |-----------|--------|-----------------|--------------------------|
+| Swagger   | GET    | /               | Redireciona para Swagger UI |
+| Swagger   | GET    | /swagger-ui.html| Interface Swagger UI     |
+| Swagger   | GET    | /api-docs       | OpenAPI JSON             |
 | Hotels    | GET    | /hotels         | Lista todos os hotéis    |
 | Hotels    | GET    | /hotels/{id}    | Busca hotel por ID       |
 | Hotels    | POST   | /hotels         | Cria novo hotel          |
