@@ -93,6 +93,7 @@ pipeline {
                                     -Dspring.datasource.username=test \
                                     -Dspring.datasource.password=test \
                                     -Dspring.datasource.driver-class-name=org.mariadb.jdbc.Driver \
+                                    -Dspring.jpa.database-platform=org.hibernate.dialect.MariaDBDialect \
                                     -Dspring.jpa.hibernate.ddl-auto=create-drop
                             '''
                         }
