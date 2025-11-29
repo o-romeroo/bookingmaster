@@ -55,7 +55,7 @@ class UserIntegrationTest {
         ResponseEntity<Void> response = restTemplate.postForEntity(baseUrl, request, Void.class);
 
         // Assert
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         
         // Verificar se foi persistido no banco
         assertThat(userRepository.count()).isEqualTo(1);
