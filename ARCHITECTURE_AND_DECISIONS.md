@@ -170,7 +170,7 @@ Para configurar o webhook do GitHub para builds automáticos quando um commit fo
 
 ### Configuração do Jenkins
 
-1. **Acesse:** http://localhost:8081
+1. **Acesse:** https://claudine-cedarn-satisfyingly.ngrok-free.dev/
 2. **Configure o job:**
    - Tipo: Pipeline
    - SCM: Git (URL do repositório)
