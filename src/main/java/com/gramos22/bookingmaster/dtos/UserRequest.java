@@ -1,5 +1,6 @@
 package com.gramos22.bookingmaster.dtos;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.media.Schema.RequiredMode;
@@ -59,11 +60,13 @@ public class UserRequest {
         this.document = document;
     }
 
-    // Alias methods for compatibility
+    // Alias methods for compatibility - hidden from JSON/Swagger
+    @JsonIgnore
     public void setFirstName(String firstName) {
         this.first_name = firstName;
     }
 
+    @JsonIgnore
     public void setLastName(String lastName) {
         this.last_name = lastName;
     }
