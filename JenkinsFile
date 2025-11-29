@@ -211,14 +211,14 @@ pipeline {
         success {
             echo '''
             ╔════════════════════════════════════════════════════════════╗
-            ║  PIPELINE CONCLUÍDO COM SUCESSO!                        ║
+            ║  PIPELINE CONCLUÍDO COM SUCESSO!                           ║
             ║                                                            ║
-            ║  Etapas executadas:                                     ║
-            ║    ✓ Commit Stage (Build + Unit + Integration Tests)     ║
-            ║    ✓ Acceptance Stage (E2E Tests)                        ║
-            ║    ✓ Release Stage (Deploy em Produção)                  ║
+            ║  Etapas executadas:                                        ║
+            ║   - Commit Stage (Build + Unit + Integration Tests)        ║
+            ║   - Acceptance Stage (E2E Tests)                           ║
+            ║   - Release Stage (Deploy em Produção)                     ║
             ║                                                            ║
-            ║  Aplicação disponível em: http://localhost:8080        ║
+            ║  Aplicação disponível em: http://localhost:8080            ║
             ╚════════════════════════════════════════════════════════════╝
             '''
         }
