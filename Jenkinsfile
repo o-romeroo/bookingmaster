@@ -4,8 +4,11 @@ pipeline {
     environment {
         DOCKER_IMAGE = 'bookingmaster'
         DOCKER_TAG = "${BUILD_NUMBER}"
+        // Configurações para Testcontainers funcionar dentro do Jenkins
         TESTCONTAINERS_RYUK_DISABLED = 'true'
+        TESTCONTAINERS_CHECKS_DISABLE = 'true'
         DOCKER_HOST = 'unix:///var/run/docker.sock'
+        TESTCONTAINERS_HOST_OVERRIDE = 'host.docker.internal'
     }
 
     options {

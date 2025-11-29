@@ -32,7 +32,8 @@ class HotelIntegrationTest {
     static MariaDBContainer<?> mariaDBContainer = new MariaDBContainer<>("mariadb:11.2")
             .withDatabaseName("bmdb_test")
             .withUsername("test")
-            .withPassword("test");
+            .withPassword("test")
+            .withReuse(true);
 
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {
