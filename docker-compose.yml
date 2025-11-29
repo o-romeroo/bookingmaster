@@ -40,12 +40,10 @@ services:
       - bookingmaster-network
 
   # ===========================================
-  # NGROK - Túnel para expor a API na Internet
+  # NGROK API - Túnel para expor a API na Internet
   # ===========================================
-  # Acesse http://localhost:4040 para ver a URL pública
+  # Acesse http://localhost:4040 para ver a URL pública da API
   # Configure NGROK_AUTHTOKEN no arquivo .env
-  # A API fica disponível publicamente via ngrok
-  # Jenkins permanece acessível apenas localmente (localhost:8081)
   # ===========================================
   ngrok:
     image: ngrok/ngrok:latest
@@ -60,6 +58,27 @@ services:
       - bookingmaster-network
     depends_on:
       - backend
+
+  # ===========================================
+  # NGROK JENKINS - Túnel para expor o Jenkins na Internet
+  # ===========================================
+  # Acesse http://localhost:4041 para ver a URL pública do Jenkins
+  # Útil para configurar webhooks do GitHub
+  # Usa token separado: NGROK_JENKINS_AUTHTOKEN
+  # ===========================================
+  ngrok-jenkins:
+    image: ngrok/ngrok:latest
+    container_name: ngrok-jenkins
+    restart: unless-stopped
+    environment:
+      - NGROK_AUTHTOKEN=${NGROK_JENKINS_AUTHTOKEN}
+    command: http jenkins:8080 --log=stdout
+    ports:
+      - "4041:4040"
+    networks:
+      - bookingmaster-network
+    depends_on:
+      - jenkins
 
   # ===========================================
   # MARIADB - Banco de Dados de Produção

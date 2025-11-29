@@ -70,38 +70,64 @@ bookingmaster/
 | `bookingmaster-db`  | mariadb:11.2            | 3306         | Banco de dados MariaDB       |
 | `jenkins`           | bookingmaster-jenkins   | 8081, 50000  | Servidor CI/CD               |
 | `ngrok`             | ngrok/ngrok:latest      | 4040         | Túnel para expor a API       |
+| `ngrok-jenkins`     | ngrok/ngrok:latest      | 4041         | Túnel para expor o Jenkins   |
 
 ### Exposição da Aplicação
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                        INTERNET                              │
-│                            │                                 │
-│                      ┌─────▼─────┐                          │
-│                      │   NGROK   │                          │
-│                      │  (túnel)  │                          │
-│                      └─────┬─────┘                          │
-│                            │                                 │
-├────────────────────────────┼────────────────────────────────┤
-│              REDE LOCAL (bookingmaster-network)              │
-│                            │                                 │
-│    ┌───────────────────────┼───────────────────────┐        │
-│    │                       │                       │        │
-│    ▼                       ▼                       ▼        │
-│ ┌──────┐            ┌──────────────┐         ┌─────────┐   │
-│ │ DB   │◄───────────│     API      │         │ Jenkins │   │
-│ │:3306 │            │    :8080     │         │  :8081  │   │
-│ └──────┘            └──────────────┘         └─────────┘   │
-│                                                   │         │
-│                                              (local only)   │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│                          INTERNET                                │
+│                     │                 │                          │
+│              ┌──────▼──────┐   ┌──────▼──────┐                  │
+│              │  NGROK API  │   │NGROK JENKINS│                  │
+│              │   (túnel)   │   │   (túnel)   │                  │
+│              └──────┬──────┘   └──────┬──────┘                  │
+│                     │                 │                          │
+├─────────────────────┼─────────────────┼─────────────────────────┤
+│                REDE LOCAL (bookingmaster-network)                │
+│                     │                 │                          │
+│    ┌────────────────┼─────────────────┼──────────────┐          │
+│    │                │                 │              │          │
+│    ▼                ▼                 ▼              ▼          │
+│ ┌──────┐     ┌──────────────┐   ┌─────────┐    ┌─────────┐     │
+│ │ DB   │◄────│     API      │   │ Jenkins │    │ Dashboards│    │
+│ │:3306 │     │    :8080     │   │  :8081  │    │4040/4041 │    │
+│ └──────┘     └──────────────┘   └─────────┘    └─────────┘     │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-**Acessos:**
-- **API Pública:** URL do ngrok (ver http://localhost:4040)
-- **API Local:** http://localhost:8080
-- **Jenkins:** http://localhost:8081 (somente local)
-- **Ngrok Dashboard:** http://localhost:4040 (somente local)
+### URLs de Acesso
+
+#### URLs Públicas (via Ngrok)
+
+| Serviço      | URL Pública                                          | Uso                              |
+|--------------|------------------------------------------------------|----------------------------------|
+| **API**      | https://oviferous-unabashedly-sherwood.ngrok-free.dev | Swagger UI, endpoints REST       |
+| **Jenkins**  | https://claudine-cedarn-satisfyingly.ngrok-free.dev   | CI/CD, webhooks GitHub           |
+
+> **Nota:** As URLs do ngrok free podem mudar a cada reinício. Verifique nos dashboards locais.
+
+#### URLs Locais
+
+| Serviço           | URL Local                  | Descrição                        |
+|-------------------|----------------------------|----------------------------------|
+| API               | http://localhost:8080      | API REST                         |
+| Swagger UI        | http://localhost:8080/swagger-ui.html | Documentação interativa |
+| Jenkins           | http://localhost:8081      | Interface CI/CD                  |
+| Ngrok Dashboard (API) | http://localhost:4040  | Monitoramento do túnel da API    |
+| Ngrok Dashboard (Jenkins) | http://localhost:4041 | Monitoramento do túnel do Jenkins |
+
+#### Configuração de Webhook GitHub
+
+Para configurar o webhook do GitHub para builds automáticos quando um commit for feito na branch master:
+
+1. Acessar as configurações do repositório no GitHub
+2. Ir em **Settings → Webhooks → Add webhook**
+3. Configurar:
+   - **Payload URL:** `https://claudine-cedarn-satisfyingly.ngrok-free.dev/github-webhook/`
+   - **Content type:** `application/json`
+   - **Events:** `Just the push event`
+4. Salvar
 
 ---
 
@@ -244,13 +270,16 @@ Todas as credenciais e informações sensíveis foram removidas do código-fonte
 
 ### Variáveis do Docker Compose (arquivo .env)
 
-| Variável          | Descrição                              |
-|-------------------|----------------------------------------|
-| `NGROK_AUTHTOKEN` | Token de autenticação do Ngrok         |
-| `DB_ROOT_PASSWORD`| Senha root do MariaDB de produção      |
-| `DB_NAME`         | Nome do banco de dados de produção     |
-| `DB_USER`         | Usuário do banco de produção           |
-| `DB_PASSWORD`     | Senha do usuário do banco de produção  |
+| Variável                 | Descrição                              |
+|--------------------------|----------------------------------------|
+| `NGROK_AUTHTOKEN`        | Token do Ngrok para expor a API        |
+| `NGROK_JENKINS_AUTHTOKEN`| Token do Ngrok para expor o Jenkins (conta separada) |
+| `DB_ROOT_PASSWORD`       | Senha root do MariaDB de produção      |
+| `DB_NAME`                | Nome do banco de dados de produção     |
+| `DB_USER`                | Usuário do banco de produção           |
+| `DB_PASSWORD`            | Senha do usuário do banco de produção  |
+
+> **Nota:** São necessárias **duas contas Ngrok** pois o plano gratuito permite apenas 1 túnel por conta.
 
 ### Configuração Local
 
