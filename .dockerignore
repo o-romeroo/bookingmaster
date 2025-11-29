@@ -1,0 +1,25 @@
+# Ignore target folder
+target/
+
+# Ignore IDE files
+.idea/
+*.iml
+.vscode/
+*.swp
+
+# Ignore Git
+.git/
+.gitignore
+
+# Ignore docs
+docs/
+*.md
+!README.md
+
+# Ignore test resources
+src/test/
+
+# Ignore local env files
+.env
+.env.local
+*.log
