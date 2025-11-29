@@ -170,7 +170,8 @@ pipeline {
                     steps {
                         script {
                             // Usa host.docker.internal porque Jenkins roda em container Docker
-                            sh './mvnw failsafe:integration-test failsafe:verify -Dit.test=*AcceptanceTest -Dtest.server.host=host.docker.internal -Dtest.server.port=8090'
+                            // -DskipAcceptanceTests=false habilita os testes de aceitação
+                            sh './mvnw failsafe:integration-test failsafe:verify -Dit.test=*AcceptanceTest -DskipAcceptanceTests=false -Dtest.server.host=host.docker.internal -Dtest.server.port=8090'
                             echo 'Testes de aceitação E2E executados'
                         }
                     }
@@ -192,7 +193,7 @@ pipeline {
 
         /* ==========================================================
          *   ETAPA DE LANÇAMENTO (Release Stage)
-         *   - Deploy em produção local (Docker Desktop)
+         *   - Deploy em produção (atualiza container existente)
          *   - Verificação de saúde pós-deploy
          * ========================================================== */
         stage('Release Stage') {
@@ -200,12 +201,28 @@ pipeline {
                 stage('Deploy to Production') {
                     steps {
                         script {
-                            // Para aplicação anterior em produção
-                            sh 'docker compose -f docker-compose.deploy.yml down --remove-orphans || true'
+                            // Para apenas o container da API (mantém DB e Jenkins rodando)
+                            sh 'docker stop bookingmaster-api || true'
+                            sh 'docker rm bookingmaster-api || true'
                             
-                            // Deploy da nova versão
+                            // Deploy da nova versão usando a rede existente
                             sh """
-                                BUILD_NUMBER=${BUILD_NUMBER} docker compose -f docker-compose.deploy.yml up -d
+                                docker run -d \
+                                    --name bookingmaster-api \
+                                    --network bookingmaster-network \
+                                    -p 8080:8080 \
+                                    -e DATABASE_URL=jdbc:mariadb://bookingmaster-db:3306/bmdb?createDatabaseIfNotExist=true \
+                                    -e DATABASE_USERNAME=bmuser \
+                                    -e DATABASE_PASSWORD=bmpassword \
+                                    -e PORT=8080 \
+                                    -e SPRING_PROFILES_ACTIVE=prod \
+                                    --restart always \
+                                    --health-cmd='curl -f http://localhost:8080/actuator/health || exit 1' \
+                                    --health-interval=30s \
+                                    --health-timeout=10s \
+                                    --health-retries=3 \
+                                    --health-start-period=60s \
+                                    ${DOCKER_IMAGE}:${DOCKER_TAG}
                             """
                             echo "Deploy da versão ${DOCKER_TAG} em produção"
                         }

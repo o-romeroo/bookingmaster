@@ -16,6 +16,8 @@
 	<properties>
 		<java.version>21</java.version>
 		<rest-assured.version>5.4.0</rest-assured.version>
+		<!-- Por padrão, pula testes de aceitação (requerem ambiente Docker) -->
+		<skipAcceptanceTests>true</skipAcceptanceTests>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -115,8 +117,13 @@
 							<includes>
 								<include>**/*IntegrationTest.java</include>
 							</includes>
+							<!-- Exclui testes de aceitação (requerem servidor externo) -->
+							<excludes>
+								<exclude>**/*AcceptanceTest.java</exclude>
+							</excludes>
 						</configuration>
 					</execution>
+					<!-- Testes de aceitação executados separadamente via -Dit.test=*AcceptanceTest -->
 					<execution>
 						<id>acceptance-tests</id>
 						<goals>
@@ -127,6 +134,8 @@
 							<includes>
 								<include>**/*AcceptanceTest.java</include>
 							</includes>
+							<!-- Por padrão, pula testes de aceitação (requerem ambiente Docker) -->
+							<skipTests>${skipAcceptanceTests}</skipTests>
 						</configuration>
 					</execution>
 				</executions>
