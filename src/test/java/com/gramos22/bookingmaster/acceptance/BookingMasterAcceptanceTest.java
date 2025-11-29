@@ -62,7 +62,7 @@ class BookingMasterAcceptanceTest {
         .when()
             .post("/hotels")
         .then()
-            .statusCode(200);
+            .statusCode(201);
     }
 
     @Test
@@ -121,7 +121,7 @@ class BookingMasterAcceptanceTest {
         .when()
             .post("/users")
         .then()
-            .statusCode(200);
+            .statusCode(201);
     }
 
     @Test
@@ -196,7 +196,7 @@ class BookingMasterAcceptanceTest {
         .when()
             .delete("/hotels/" + createdHotelId)
         .then()
-            .statusCode(200);
+            .statusCode(204);
     }
 
     @Test
