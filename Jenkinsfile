@@ -85,16 +85,16 @@ pipeline {
                             
                             // Executa os testes de integração com o banco MariaDB externo
                             // Usa o nome do container como hostname (mesma rede Docker)
+                            // IMPORTANTE: Usamos variáveis de ambiente para sobrescrever os placeholders do properties
                             sh '''
+                                SPRING_DATASOURCE_URL=jdbc:mariadb://mariadb-integration-test:3306/bmdb_test \
+                                SPRING_DATASOURCE_USERNAME=test \
+                                SPRING_DATASOURCE_PASSWORD=test \
+                                SPRING_DATASOURCE_DRIVER=org.mariadb.jdbc.Driver \
+                                HIBERNATE_DIALECT=org.hibernate.dialect.MariaDBDialect \
                                 ./mvnw failsafe:integration-test failsafe:verify \
                                     -Dit.test=*IntegrationTest \
-                                    -Dspring.profiles.active=integration-test \
-                                    -Dspring.datasource.url=jdbc:mariadb://mariadb-integration-test:3306/bmdb_test \
-                                    -Dspring.datasource.username=test \
-                                    -Dspring.datasource.password=test \
-                                    -Dspring.datasource.driver-class-name=org.mariadb.jdbc.Driver \
-                                    -Dspring.jpa.database-platform=org.hibernate.dialect.MariaDBDialect \
-                                    -Dspring.jpa.hibernate.ddl-auto=create-drop
+                                    -Dspring.profiles.active=integration-test
                             '''
                         }
                         echo 'Testes de integração executados'
