@@ -1,0 +1,97 @@
+version: "3.8"
+
+# ===========================================
+# INFRAESTRUTURA CI/CD - BookingMaster
+# ===========================================
+# Este arquivo configura toda a infraestrutura para CI/CD:
+# - Jenkins (servidor de CI/CD)
+# - MariaDB (banco de produção)
+# - BookingMaster API (aplicação)
+# ===========================================
+
+services:
+  # ===========================================
+  # JENKINS - Servidor CI/CD
+  # ===========================================
+  jenkins:
+    image: jenkins/jenkins:lts-jdk21
+    container_name: jenkins
+    restart: unless-stopped
+    privileged: true
+    user: root
+    ports:
+      - "8081:8080"
+      - "50000:50000"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /usr/bin/docker:/usr/bin/docker
+    environment:
+      - JAVA_OPTS=-Djenkins.install.runSetupWizard=false
+    networks:
+      - bookingmaster-network
+
+  # ===========================================
+  # MARIADB - Banco de Dados de Produção
+  # ===========================================
+  db:
+    image: mariadb:11.2
+    container_name: bookingmaster-db
+    restart: always
+    environment:
+      MARIADB_ROOT_PASSWORD: rootpassword
+      MARIADB_DATABASE: bmdb
+      MARIADB_USER: bmuser
+      MARIADB_PASSWORD: bmpassword
+    ports:
+      - "3306:3306"
+    volumes:
+      - mariadb-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - bookingmaster-network
+
+  # ===========================================
+  # BOOKINGMASTER API - Aplicação
+  # ===========================================
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: bookingmaster:latest
+    container_name: bookingmaster-api
+    restart: always
+    environment:
+      - DATABASE_URL=jdbc:mariadb://db:3306/bmdb?createDatabaseIfNotExist=true
+      - DATABASE_USERNAME=bmuser
+      - DATABASE_PASSWORD=bmpassword
+      - PORT=8080
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - bookingmaster-network
+
+volumes:
+  jenkins_home:
+    name: jenkins_home
+  mariadb-data:
+    name: bookingmaster-mariadb-data
+
+networks:
+  bookingmaster-network:
+    name: bookingmaster-network
+    driver: bridge

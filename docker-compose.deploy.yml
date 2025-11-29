@@ -1,0 +1,72 @@
+version: "3.8"
+
+# ===========================================
+# DEPLOY DE PRODUÇÃO - BookingMaster
+# ===========================================
+# Usado pelo Jenkins para fazer deploy da aplicação
+# ===========================================
+
+services:
+  # ===========================================
+  # MARIADB - Banco de Dados de Produção
+  # ===========================================
+  db:
+    image: mariadb:11.2
+    container_name: bookingmaster-db-prod
+    restart: always
+    environment:
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootpassword}
+      MARIADB_DATABASE: ${DB_NAME:-bmdb}
+      MARIADB_USER: ${DB_USER:-bmuser}
+      MARIADB_PASSWORD: ${DB_PASSWORD:-bmpassword}
+    ports:
+      - "3307:3306"
+    volumes:
+      - mariadb-prod-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - bookingmaster-prod-network
+
+  # ===========================================
+  # BOOKINGMASTER API - Aplicação de Produção
+  # ===========================================
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: bookingmaster:${BUILD_NUMBER:-latest}
+    container_name: bookingmaster-api-prod
+    restart: always
+    environment:
+      - DATABASE_URL=jdbc:mariadb://db:3306/${DB_NAME:-bmdb}?createDatabaseIfNotExist=true
+      - DATABASE_USERNAME=${DB_USER:-bmuser}
+      - DATABASE_PASSWORD=${DB_PASSWORD:-bmpassword}
+      - PORT=8080
+      - SPRING_PROFILES_ACTIVE=prod
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - bookingmaster-prod-network
+
+volumes:
+  mariadb-prod-data:
+    name: bookingmaster-mariadb-prod-data
+
+networks:
+  bookingmaster-prod-network:
+    name: bookingmaster-prod-network
+    driver: bridge
