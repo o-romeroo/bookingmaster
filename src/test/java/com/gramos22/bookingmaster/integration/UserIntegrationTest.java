@@ -18,7 +18,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Testes de Integração para User
- * Usa banco de dados configurado via properties (H2 para local, MariaDB para CI)
+ * Requer MariaDB rodando (via docker-compose-test.yml ou container CI)
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("integration-test")

@@ -24,9 +24,9 @@ BookingMaster é um sistema simples de gerenciamento de reservas de hotéis. Ele
 
 ## Tecnologias Utilizadas
 
-- **Java 17**
-- **Spring Boot**
-- **H2 Database** (banco de dados em memória para testes)
+- **Java 21**
+- **Spring Boot 3.2.1**
+- **MariaDB 11.2** (banco de dados via Docker)
 - **Lombok**
 - **JUnit 5** (para testes unitários)
 - **Maven**
