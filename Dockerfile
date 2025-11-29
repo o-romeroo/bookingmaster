@@ -15,10 +15,8 @@ RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 
 COPY --from=build /app/target/bookingmaster-*.jar app.jar
 
-# Variáveis de ambiente padrão (alinhadas com docker-compose.yml)
-ENV DATABASE_URL=jdbc:mariadb://bookingmaster-db:3306/bmdb?createDatabaseIfNotExist=true
-ENV DATABASE_USERNAME=bmuser
-ENV DATABASE_PASSWORD=bmpassword
+# Variáveis de ambiente - devem ser fornecidas em runtime via docker-compose ou Jenkins
+# DATABASE_URL, DATABASE_USERNAME, DATABASE_PASSWORD serão injetadas pelo orquestrador
 ENV PORT=8080
 
 EXPOSE 8080

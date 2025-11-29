@@ -6,6 +6,14 @@ version: "3.8"
 # Usado pelo Jenkins para fazer deploy da aplicação
 # ===========================================
 
+# Variáveis necessárias:
+#   - DB_ROOT_PASSWORD
+#   - DB_NAME
+#   - DB_USER
+#   - DB_PASSWORD
+#   - BUILD_NUMBER (opcional, default: latest)
+# ===========================================
+
 services:
   # ===========================================
   # MARIADB - Banco de Dados de Produção
@@ -15,10 +23,10 @@ services:
     container_name: bookingmaster-db-prod
     restart: always
     environment:
-      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootpassword}
-      MARIADB_DATABASE: ${DB_NAME:-bmdb}
-      MARIADB_USER: ${DB_USER:-bmuser}
-      MARIADB_PASSWORD: ${DB_PASSWORD:-bmpassword}
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MARIADB_DATABASE: ${DB_NAME}
+      MARIADB_USER: ${DB_USER}
+      MARIADB_PASSWORD: ${DB_PASSWORD}
     ports:
       - "3307:3306"
     volumes:
@@ -43,9 +51,9 @@ services:
     container_name: bookingmaster-api-prod
     restart: always
     environment:
-      - DATABASE_URL=jdbc:mariadb://db:3306/${DB_NAME:-bmdb}?createDatabaseIfNotExist=true
-      - DATABASE_USERNAME=${DB_USER:-bmuser}
-      - DATABASE_PASSWORD=${DB_PASSWORD:-bmpassword}
+      - DATABASE_URL=jdbc:mariadb://db:3306/${DB_NAME}?createDatabaseIfNotExist=true
+      - DATABASE_USERNAME=${DB_USER}
+      - DATABASE_PASSWORD=${DB_PASSWORD}
       - PORT=8080
       - SPRING_PROFILES_ACTIVE=prod
     ports:

@@ -1,6 +1,12 @@
 # Docker Compose para ambiente de testes de aceitação (E2E)
 # Usado durante a Etapa de Teste de Aceitação no pipeline CI/CD
 # Porta: 8090 (isolado da produção que usa 8080)
+# 
+# Variáveis necessárias (passadas via Jenkins secrets):
+#   - TEST_DB_ROOT_PASSWORD
+#   - TEST_DB_NAME
+#   - TEST_DB_USER
+#   - TEST_DB_PASSWORD
 
 services:
   # ================================
@@ -11,10 +17,10 @@ services:
     container_name: bookingmaster-mariadb-test
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: testroot123
-      MYSQL_DATABASE: bookingmaster_test
-      MYSQL_USER: testuser
-      MYSQL_PASSWORD: testpass123
+      MYSQL_ROOT_PASSWORD: ${TEST_DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${TEST_DB_NAME}
+      MYSQL_USER: ${TEST_DB_USER}
+      MYSQL_PASSWORD: ${TEST_DB_PASSWORD}
     ports:
       - "3308:3306"
     volumes:
@@ -40,9 +46,9 @@ services:
         condition: service_healthy
     environment:
       SPRING_PROFILES_ACTIVE: test
-      DATABASE_URL: jdbc:mariadb://bookingmaster-mariadb-test:3306/bookingmaster_test?createDatabaseIfNotExist=true
-      DATABASE_USERNAME: testuser
-      DATABASE_PASSWORD: testpass123
+      DATABASE_URL: jdbc:mariadb://bookingmaster-mariadb-test:3306/${TEST_DB_NAME}?createDatabaseIfNotExist=true
+      DATABASE_USERNAME: ${TEST_DB_USER}
+      DATABASE_PASSWORD: ${TEST_DB_PASSWORD}
       PORT: 8080
     ports:
       - "8090:8080"

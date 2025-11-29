@@ -7,6 +7,13 @@ version: "3.8"
 # - Jenkins (servidor de CI/CD)
 # - MariaDB (banco de produção)
 # - BookingMaster API (aplicação)
+#
+# Variáveis necessárias no arquivo .env:
+#   - NGROK_AUTHTOKEN
+#   - DB_ROOT_PASSWORD
+#   - DB_NAME
+#   - DB_USER
+#   - DB_PASSWORD
 # ===========================================
 
 services:
@@ -62,10 +69,10 @@ services:
     container_name: bookingmaster-db
     restart: always
     environment:
-      MARIADB_ROOT_PASSWORD: rootpassword
-      MARIADB_DATABASE: bmdb
-      MARIADB_USER: bmuser
-      MARIADB_PASSWORD: bmpassword
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MARIADB_DATABASE: ${DB_NAME}
+      MARIADB_USER: ${DB_USER}
+      MARIADB_PASSWORD: ${DB_PASSWORD}
     ports:
       - "3306:3306"
     volumes:
@@ -90,9 +97,9 @@ services:
     container_name: bookingmaster-api
     restart: always
     environment:
-      - DATABASE_URL=jdbc:mariadb://bookingmaster-db:3306/bmdb?createDatabaseIfNotExist=true
-      - DATABASE_USERNAME=bmuser
-      - DATABASE_PASSWORD=bmpassword
+      - DATABASE_URL=jdbc:mariadb://bookingmaster-db:3306/${DB_NAME}?createDatabaseIfNotExist=true
+      - DATABASE_USERNAME=${DB_USER}
+      - DATABASE_PASSWORD=${DB_PASSWORD}
       - PORT=8080
       - SPRING_PROFILES_ACTIVE=prod
     ports:

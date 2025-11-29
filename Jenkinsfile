@@ -4,6 +4,17 @@ pipeline {
     environment {
         DOCKER_IMAGE = 'bookingmaster'
         DOCKER_TAG = "${BUILD_NUMBER}"
+        
+        // Credenciais de Produção (secrets do Jenkins)
+        PROD_DB_URL = credentials('PROD_DB_URL')
+        PROD_DB_USER = credentials('PROD_DB_USER')
+        PROD_DB_PASSWORD = credentials('PROD_DB_PASSWORD')
+        
+        // Credenciais de Teste (secrets do Jenkins)
+        TEST_DB_ROOT_PASSWORD = credentials('TEST_DB_ROOT_PASSWORD')
+        TEST_DB_NAME = credentials('TEST_DB_NAME')
+        TEST_DB_USER = credentials('TEST_DB_USER')
+        TEST_DB_PASSWORD = credentials('TEST_DB_PASSWORD')
     }
 
     options {
@@ -47,31 +58,31 @@ pipeline {
                 stage('Unit Tests') {
                     steps {
                         script {
-                            sh '''
+                            sh """
                                 docker rm -f mariadb-unit-test || true
                                 docker run -d --name mariadb-unit-test \
                                     --network bookingmaster-network \
-                                    -e MYSQL_ROOT_PASSWORD=testroot123 \
-                                    -e MYSQL_DATABASE=bookingmaster_test \
-                                    -e MYSQL_USER=testuser \
-                                    -e MYSQL_PASSWORD=testpass123 \
+                                    -e MYSQL_ROOT_PASSWORD=${TEST_DB_ROOT_PASSWORD} \
+                                    -e MYSQL_DATABASE=${TEST_DB_NAME} \
+                                    -e MYSQL_USER=${TEST_DB_USER} \
+                                    -e MYSQL_PASSWORD=${TEST_DB_PASSWORD} \
                                     mariadb:11.2
 
                                 echo "Aguardando MariaDB (unit tests) iniciar..."
-                                for i in $(seq 1 30); do
-                                    if docker exec mariadb-unit-test mariadb -utestuser -ptestpass123 -e "SELECT 1" > /dev/null 2>&1; then
+                                for i in \$(seq 1 30); do
+                                    if docker exec mariadb-unit-test mariadb -u${TEST_DB_USER} -p${TEST_DB_PASSWORD} -e "SELECT 1" > /dev/null 2>&1; then
                                         echo "MariaDB unit-test pronto!"
                                         break
                                     fi
-                                    echo "Tentativa $i/30 - aguardando..."
+                                    echo "Tentativa \$i/30 - aguardando..."
                                     sleep 2
                                 done
-                            '''
+                            """
 
                             withEnv([
-                                'SPRING_DATASOURCE_URL=jdbc:mariadb://mariadb-unit-test:3306/bookingmaster_test',
-                                'SPRING_DATASOURCE_USERNAME=testuser',
-                                'SPRING_DATASOURCE_PASSWORD=testpass123',
+                                "SPRING_DATASOURCE_URL=jdbc:mariadb://mariadb-unit-test:3306/${TEST_DB_NAME}",
+                                "SPRING_DATASOURCE_USERNAME=${TEST_DB_USER}",
+                                "SPRING_DATASOURCE_PASSWORD=${TEST_DB_PASSWORD}",
                                 'SPRING_DATASOURCE_DRIVER_CLASS_NAME=org.mariadb.jdbc.Driver',
                                 'SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.MariaDBDialect',
                                 'SPRING_JPA_HIBERNATE_DDL_AUTO=create-drop'
@@ -93,35 +104,35 @@ pipeline {
                     steps {
                         script {
                             // Inicia um container MariaDB para os testes de integração
-                            sh '''
+                            sh """
                                 docker rm -f mariadb-integration-test || true
                                 docker run -d --name mariadb-integration-test \
                                     --network bookingmaster-network \
-                                    -e MYSQL_ROOT_PASSWORD=test \
-                                    -e MYSQL_DATABASE=bmdb_test \
-                                    -e MYSQL_USER=test \
-                                    -e MYSQL_PASSWORD=test \
+                                    -e MYSQL_ROOT_PASSWORD=${TEST_DB_ROOT_PASSWORD} \
+                                    -e MYSQL_DATABASE=${TEST_DB_NAME} \
+                                    -e MYSQL_USER=${TEST_DB_USER} \
+                                    -e MYSQL_PASSWORD=${TEST_DB_PASSWORD} \
                                     mariadb:11.2
                                 
                                 # Aguarda o MariaDB estar pronto
                                 echo "Aguardando MariaDB iniciar..."
-                                for i in $(seq 1 30); do
-                                    if docker exec mariadb-integration-test mariadb -utest -ptest -e "SELECT 1" > /dev/null 2>&1; then
+                                for i in \$(seq 1 30); do
+                                    if docker exec mariadb-integration-test mariadb -u${TEST_DB_USER} -p${TEST_DB_PASSWORD} -e "SELECT 1" > /dev/null 2>&1; then
                                         echo "MariaDB está pronto!"
                                         break
                                     fi
-                                    echo "Tentativa $i/30 - aguardando..."
+                                    echo "Tentativa \$i/30 - aguardando..."
                                     sleep 2
                                 done
-                            '''
+                            """
                         }
                         
                         // Executa os testes de integração usando variáveis de ambiente
                         // Spring Boot prioriza env vars (SPRING_*) sobre properties
                         withEnv([
-                            'SPRING_DATASOURCE_URL=jdbc:mariadb://mariadb-integration-test:3306/bmdb_test',
-                            'SPRING_DATASOURCE_USERNAME=test',
-                            'SPRING_DATASOURCE_PASSWORD=test',
+                            "SPRING_DATASOURCE_URL=jdbc:mariadb://mariadb-integration-test:3306/${TEST_DB_NAME}",
+                            "SPRING_DATASOURCE_USERNAME=${TEST_DB_USER}",
+                            "SPRING_DATASOURCE_PASSWORD=${TEST_DB_PASSWORD}",
                             'SPRING_DATASOURCE_DRIVER_CLASS_NAME=org.mariadb.jdbc.Driver',
                             'SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.MariaDBDialect',
                             'SPRING_JPA_HIBERNATE_DDL_AUTO=create-drop',
@@ -165,11 +176,6 @@ pipeline {
          *   - Cleanup do ambiente de teste
          * ========================================================== */
         stage('Acceptance Stage') {
-            environment {
-                APP_PORT = '8090'
-                DB_PORT = '3308'
-                SPRING_PROFILES_ACTIVE = 'test'
-            }
             stages {
                 stage('Start Test Environment') {
                     steps {
@@ -177,22 +183,26 @@ pipeline {
                             // Para qualquer container anterior de teste
                             sh 'docker compose -f docker-compose-test.yml down --remove-orphans || true'
                             
-                            // Inicia ambiente de teste isolado
-                            sh '''
+                            // Inicia ambiente de teste isolado (variáveis TEST_DB_* já estão no environment global)
+                            sh """
+                                export TEST_DB_ROOT_PASSWORD=${TEST_DB_ROOT_PASSWORD}
+                                export TEST_DB_NAME=${TEST_DB_NAME}
+                                export TEST_DB_USER=${TEST_DB_USER}
+                                export TEST_DB_PASSWORD=${TEST_DB_PASSWORD}
                                 docker compose -f docker-compose-test.yml up -d
                                 
                                 # Aguarda aplicação estar pronta (health check)
                                 # Usa host.docker.internal porque o Jenkins roda em container
                                 echo "Aguardando aplicação iniciar..."
-                                for i in $(seq 1 60); do
+                                for i in \$(seq 1 60); do
                                     if curl -s http://host.docker.internal:8090/actuator/health | grep -q "UP"; then
                                         echo "Aplicação está pronta!"
                                         break
                                     fi
-                                    echo "Tentativa $i/60 - aguardando..."
+                                    echo "Tentativa \$i/60 - aguardando..."
                                     sleep 5
                                 done
-                            '''
+                            """
                             echo 'Ambiente de teste iniciado'
                         }
                     }
@@ -243,9 +253,9 @@ pipeline {
                                     --name bookingmaster-api \
                                     --network bookingmaster-network \
                                     -p 8080:8080 \
-                                    -e DATABASE_URL=jdbc:mariadb://bookingmaster-db:3306/bmdb?createDatabaseIfNotExist=true \
-                                    -e DATABASE_USERNAME=bmuser \
-                                    -e DATABASE_PASSWORD=bmpassword \
+                                    -e DATABASE_URL=${PROD_DB_URL} \
+                                    -e DATABASE_USERNAME=${PROD_DB_USER} \
+                                    -e DATABASE_PASSWORD=${PROD_DB_PASSWORD} \
                                     -e PORT=8080 \
                                     -e SPRING_PROFILES_ACTIVE=prod \
                                     --restart always \
