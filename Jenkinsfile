@@ -81,19 +81,20 @@ pipeline {
                                     sleep 2
                                 done
                             '''
-                            
-                            // Executa os testes de integração com o banco MariaDB externo
-                            sh '''
-                                ./mvnw failsafe:integration-test failsafe:verify \
-                                    -Dit.test=*IntegrationTest \
-                                    -Dspring.profiles.active=integration-test \
-                                    -Dspring.datasource.url=jdbc:mariadb://mariadb-integration-test:3306/bmdb_test \
-                                    -Dspring.datasource.username=test \
-                                    -Dspring.datasource.password=test \
-                                    -Dspring.datasource.driver-class-name=org.mariadb.jdbc.Driver \
-                                    -Dspring.jpa.database-platform=org.hibernate.dialect.MariaDBDialect \
-                                    -Dspring.jpa.hibernate.ddl-auto=create-drop
-                            '''
+                        }
+                        
+                        // Executa os testes de integração usando variáveis de ambiente
+                        // Spring Boot prioriza env vars (SPRING_*) sobre properties
+                        withEnv([
+                            'SPRING_DATASOURCE_URL=jdbc:mariadb://mariadb-integration-test:3306/bmdb_test',
+                            'SPRING_DATASOURCE_USERNAME=test',
+                            'SPRING_DATASOURCE_PASSWORD=test',
+                            'SPRING_DATASOURCE_DRIVER_CLASS_NAME=org.mariadb.jdbc.Driver',
+                            'SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.MariaDBDialect',
+                            'SPRING_JPA_HIBERNATE_DDL_AUTO=create-drop',
+                            'SPRING_PROFILES_ACTIVE=integration-test'
+                        ]) {
+                            sh './mvnw failsafe:integration-test failsafe:verify -Dit.test=*IntegrationTest'
                         }
                         echo 'Testes de integração executados'
                     }
