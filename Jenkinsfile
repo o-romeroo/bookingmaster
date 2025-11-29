@@ -323,19 +323,19 @@ pipeline {
         }
         failure {
             echo '''
-            ╔════════════════════════════════════════════════════════════╗
-            ║  PIPELINE FALHOU!                                          ║
-            ║                                                            ║
-            ║  Verifique os logs para detalhes do erro.                  ║
-            ╚════════════════════════════════════════════════════════════╝
+            ╔════════════════════════════════════════════════════════════════╗
+            ║  PIPELINE FALHOU!                                              ║
+            ║                                                                ║
+            ║  Verifique os logs para detalhes do erro.                      ║
+            ╚════════════════════════════════════════════════════════════════╝
             '''
-            // Cleanup em caso de falha (precisa de node context)
-            node {
+            // Cleanup em caso de falha
+            node('') {
                 sh 'docker compose -f docker-compose-test.yml down --remove-orphans --volumes || true'
             }
         }
         always {
-            node {
+            node('') {
                 cleanWs()
             }
         }
