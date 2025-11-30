@@ -3,6 +3,8 @@ package com.gramos22.bookingmaster.services;
 import com.gramos22.bookingmaster.dtos.UserRequest;
 import com.gramos22.bookingmaster.dtos.UserResponse;
 import com.gramos22.bookingmaster.entities.User;
+
+import java.util.List;
 import com.gramos22.bookingmaster.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -21,6 +23,21 @@ public class UserServiceImpl implements UserService {
         user.setEmail(userRequest.getEmail());
         user.setDocument(userRequest.getDocument());
         userRepository.save(user);
+    }
+
+    @Override
+    public List<UserResponse> getAllUsers() {
+        return userRepository.findAll().stream()
+                .map(user -> {
+                    UserResponse response = new UserResponse();
+                    response.setId(user.getId());
+                    response.setFirst_name(user.getFirst_name());
+                    response.setLast_name(user.getLast_name());
+                    response.setEmail(user.getEmail());
+                    response.setDocument(user.getDocument());
+                    return response;
+                })
+                .toList();
     }
 
     @Override

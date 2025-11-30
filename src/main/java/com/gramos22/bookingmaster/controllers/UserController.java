@@ -12,6 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/users")
 @Tag(name = "Users", description = "Gerenciamento de usuários")
@@ -29,6 +31,15 @@ public class UserController {
     })
     public void addUser(@RequestBody UserRequest userRequest) {
         userService.addUser(userRequest);
+    }
+
+    @GetMapping
+    @Operation(summary = "Listar todos os usuários", description = "Retorna a lista de todos os usuários cadastrados")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Lista de usuários retornada com sucesso")
+    })
+    public List<UserResponse> getAllUsers() {
+        return userService.getAllUsers();
     }
 
     @GetMapping("/{id}")
