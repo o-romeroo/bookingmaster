@@ -3,7 +3,6 @@ package com.gramos22.bookingmaster.dtos;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDate;
-import java.util.List;
 
 @Schema(description = "Dados de resposta de uma reserva")
 public class BookingResponse {
@@ -23,8 +22,8 @@ public class BookingResponse {
     @Schema(description = "Data de check-out", example = "2025-12-05")
     private LocalDate checkOutDate;
 
-    @Schema(description = "Lista de acompanhantes")
-    private List<String> companions;
+    @Schema(description = "Preço total da reserva", example = "1800.00")
+    private double price;
 
     // Getters and Setters
     public Long getId() {
@@ -67,11 +66,11 @@ public class BookingResponse {
         this.checkOutDate = checkOutDate;
     }
 
-    public List<String> getCompanions() {
-        return companions;
+    public double getPrice() {
+        return price;
     }
 
-    public void setCompanions(List<String> companions) {
-        this.companions = companions;
+    public void setPrice(double price) {
+        this.price = price;
     }
 }
