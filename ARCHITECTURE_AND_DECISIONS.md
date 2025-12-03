@@ -38,7 +38,7 @@ bookingmaster/
 
 ## Endpoints da API
 
-**Documentação interativa disponível em:** http://localhost:8080/swagger-ui.html
+**Documentação interativa disponível em:** https://oviferous-unabashedly-sherwood.ngrok-free.dev/swagger-ui.html
 
 | Recurso   | Método | Endpoint        | Descrição                |
 |-----------|--------|-----------------|--------------------------|
