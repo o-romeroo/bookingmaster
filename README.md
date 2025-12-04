@@ -30,6 +30,9 @@ BookingMaster é um sistema simples de gerenciamento de reservas de hotéis. Ele
 - **Lombok**
 - **JUnit 5** (para testes unitários)
 - **Maven**
+- **Docker**
+- **Jenkins**
+
 
 ## Estrutura do Projeto
 
